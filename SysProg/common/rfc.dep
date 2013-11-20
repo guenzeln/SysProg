@@ -1,0 +1,4 @@
+common/rfc.o: common/rfc.c common/rfc.h common/question.h
+common/rfc.c:
+common/rfc.h:
+common/question.h:

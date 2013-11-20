@@ -1,0 +1,3 @@
+server/clientthread.o: server/clientthread.c server/clientthread.h
+server/clientthread.c:
+server/clientthread.h:

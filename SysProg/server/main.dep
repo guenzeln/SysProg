@@ -1,0 +1,3 @@
+server/main.o: server/main.c common/util.h
+server/main.c:
+common/util.h:

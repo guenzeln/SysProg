@@ -1,0 +1,4 @@
+loader/browse.o: loader/browse.c common/util.h loader/browse.h
+loader/browse.c:
+common/util.h:
+loader/browse.h:
