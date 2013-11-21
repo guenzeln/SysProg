@@ -16,13 +16,13 @@
 int main(int argc, char *argv[]) {
 
     if (argc != 2 ) {
-        printf("Fehler: Falsche/keine Parameter!\n");
+        printf("Fehler: Bitte (nur) Port angeben!\n");
         exit(1);
     }
 
-    //setProgName();
-    //debugEnable();
-    //infoPrint("Server Gruppe 10");
+    /*setProgName(argv[0]);
+    debugEnable();
+    infoPrint("Server Gruppe 10");*/
 
     LoginInit(atoi(argv[1]));
 
