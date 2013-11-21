@@ -8,15 +8,33 @@
  */
 
 #include "login.h"
+#include <sys/socket.h>
+#include <netinet/in.h>
+#include <arpa/inet.h>
+#include <sys/types.h>
+#include <errno.h>
+#include <pthread.h>
+#include <unistd.h>
+#define MAX_CLIENTS 5
+#define BLOCKSIZE 1024
 
-int loginThread(int client) {
+char message [64] = "Verbindung hergestellt. Bitte Login-Daten eingeben.";
+char buffer [BLOCKSIZE];
 
+size_t MESSAGE = 64;
+size_t DATA = 1024;
+ssize_t size;
+pthread_t LOGIN, CLIENT [MAX_CLIENTS];
+static struct sockaddr_in server_in;
 
-    if (client == 1)
-        return 0;
-    else
-        return -1;
+Login_Init(int port) {
+	int create_socket;
+	create_socket = Server_Init(port);
+	ClientInit(create_socket);
+
 }
+
+
 
 void ClientInit(int _create_socket) {
 
@@ -48,7 +66,7 @@ void ClientInit(int _create_socket) {
     }
 }
 
-int ServerInit(int port) {
+int ServerInit(int _port) {
 
     int s_socket = socket(AF_INET, SOCK_STREAM, 0);
 
@@ -60,7 +78,7 @@ int ServerInit(int port) {
     printf("Socket wurde angelegt.\n");
     server_in.sin_family = AF_INET;
     server_in.sin_addr.s_addr = INADDR_ANY;
-    server_in.sin_port = htons(port);
+    server_in.sin_port = htons(_port);
 
     if(bind(s_socket, (struct sockaddr *)&server_in, sizeof(server_in)) == -1) {
         perror("Socket konnte nicht an die Adresse gebunden werden: ");
@@ -72,4 +90,13 @@ int ServerInit(int port) {
     }
 
 return s_socket;
+}
+
+int loginThread(int client) {
+
+
+    if (client == 1)
+        return 0;
+    else
+        return -1;
 }

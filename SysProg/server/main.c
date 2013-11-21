@@ -7,15 +7,9 @@
  * main.c: Hauptprogramm des Servers
  */
 
-#include <sys/socket.h>
-#include <netinet/in.h>
-#include <arpa/inet.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <sys/types.h>
-#include <errno.h>
-#include <pthread.h>
-#include <unistd.h>
+
 
 
 int main(int argc, char *argv[]) {
