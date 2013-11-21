@@ -15,6 +15,8 @@
 #include <errno.h>
 #include <pthread.h>
 #include <unistd.h>
+#include <stdio.h>
+#include <stdlib.h>
 #define MAX_CLIENTS 5
 #define BLOCKSIZE 1024
 
