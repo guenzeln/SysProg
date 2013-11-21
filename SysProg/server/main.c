@@ -10,6 +10,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include "login.h"
+//#include "common/util.h"
 
 
 int main(int argc, char *argv[]) {
@@ -19,11 +20,11 @@ int main(int argc, char *argv[]) {
         exit(1);
     }
 
-    setProgName();
-    debugEnable();
-    infoPrint("Server Gruppe 10");
+    //setProgName();
+    //debugEnable();
+    //infoPrint("Server Gruppe 10");
 
-    Login_Init(atoi(argv[1]));
+    LoginInit(atoi(argv[1]));
 
 
 

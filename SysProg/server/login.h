@@ -10,9 +10,9 @@
 #ifndef LOGIN_H
 #define LOGIN_H
 
-void Client_Init(int client_socket){};
-int Server_Init (int _port);
-void Login_Init(int port);
+void ClientInit(int client_socket);
+int ServerInit (int _port);
+void LoginInit(int port);
 
 /* ... */
 

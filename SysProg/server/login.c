@@ -29,9 +29,9 @@ ssize_t size;
 pthread_t LOGIN, CLIENT [MAX_CLIENTS];
 static struct sockaddr_in server_in;
 
-Login_Init(int port) {
+void LoginInit(int port) {
 	int create_socket;
-	create_socket = Server_Init(port);
+	create_socket = ServerInit(port);
 	ClientInit(create_socket);
 
 }
