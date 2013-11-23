@@ -61,7 +61,7 @@ void ClientInit(int _create_socket) {
 					else {
 						if (sizeof(packet.data) > 32) {
 							printf("Benutzername zu lang. Client wird informiert...\n");
-							errorPacket.
+
 							send(client_socket[client_id], errorPacket,sizeof(errorPacket));
 						}
 						printf("Nachricht empfangen: %s\n", buffer);
