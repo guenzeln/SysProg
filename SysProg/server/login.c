@@ -8,7 +8,7 @@
  */
 
 #include "login.h"
-#include "common/rfc.h"
+#include "rfc.h"
 #include <sys/socket.h>
 #include <netinet/in.h>
 #include <arpa/inet.h>
@@ -45,7 +45,8 @@ void ClientInit(int _create_socket) {
 	packetError errorPacket;
 	packet loginrcv, loginrsp;
 	int client_socket[MAX_CLIENTS]; //asdasdsdasdsad
-	int client_id;
+	int client_id = 0;
+	int laenge;
 
 	while (1) {
 		do {
@@ -54,18 +55,19 @@ void ClientInit(int _create_socket) {
 				perror("Fehler beim Verbinden mit Socket: ");
 			if (client_id == MAX_CLIENTS) {
 				printf("Maximale Anzahl an Clients erreicht! Client wird informiert...");
-				errorPacket.err.message = "Maximale Anzahl an Clients erreicht. Pech!";
-				errorPacket.head.length = sizeof(errorPacket.error.message+1);
+				errorPacket.head.type = 255;
+				//errorPacket.err.message = "Maximale Anzahl an Clients erreicht. Pech!";
+				errorPacket.head.length = sizeof(errorPacket.err.message+1);
 				errorPacket.err.subtype = 0;
-				send(client_socket[client_id], errorPacket, sizeof(errorPacket), 0);
+				send(client_socket[client_id], &errorPacket, sizeof(errorPacket), 0);
 				close(client_socket[client_id]);
 			}
 			else {
-				if (send(client_socket[client_id], message, sizeof(message),0) < 0)
+				if (send(client_socket[client_id], &message, sizeof(message),0) < 0)
 					perror("Datenverlust beim Senden");
 				else {
 					printf("Warte auf Login-Request vom Client...");
-					if (recv(client_socket[client_id], (packet) &loginrcv, sizeof(loginrcv),0) < 0)
+					if (recv(client_socket[client_id], &loginrcv, sizeof(loginrcv),0) < 0)
 						perror("Daten konnten nicht gelesen werden!");
 					else {
 						int check = 1;
@@ -74,22 +76,23 @@ void ClientInit(int _create_socket) {
 						while(check){
 							for(i = 0; i < MAX_CLIENTS-1; i++) {
 								if( playerlist[i].playername == loginrcv.data.playername){
-									errorPacket.err.message = "Player bereits angemeldet.";
-									errorPacket.head.length = sizeof(errorPacket.error.message+1);
+									errorPacket.head.type = 255;
+									//errorPacket.err.message = "Player bereits angemeldet.";
+									errorPacket.head.length = sizeof(errorPacket.err.message+1);
 									errorPacket.err.subtype = 0;
-									send(client_socket[client_id], errorPacket, sizeof(errorPacket), 0);
+									send(client_socket[client_id], &errorPacket, sizeof(errorPacket), 0);
 									i = MAX_CLIENTS-1;
 									true = 0;
 								}
 							}
 							if(true) {
-								playerlist[client_id] = packet.packetData;
-								playlist[client_id].ID = client_id;
+								playerlist[client_id] = loginrcv.data;
+								playerlist[client_id].ID = client_id;
 								loginrsp.head.type = 2;
 								loginrsp.head.length = 1;
 								loginrsp.data.ID = client_id;
 
-								send(client_socket[client_id], loginrsp, sizeof(loginrsp), 0);
+								send(client_socket[client_id], &loginrsp, sizeof(loginrsp), 0);
 								client_id++;
 								check = 0;
 							}
@@ -99,6 +102,7 @@ void ClientInit(int _create_socket) {
 			}
 		} while (client_id <= MAX_CLIENTS);
 	}
+}
 
 	int ServerInit(int _port) {
 
@@ -109,7 +113,6 @@ void ClientInit(int _create_socket) {
 			exit(1);
 		}
 
-		printf("Socket wurde angelegt.\nWarte auf Anfragen...\n");
 		server_in.sin_family = AF_INET;
 		server_in.sin_addr.s_addr = INADDR_ANY;
 		server_in.sin_port = htons(_port);
@@ -123,7 +126,7 @@ void ClientInit(int _create_socket) {
 			perror("Fehler beim Eingehen von Verbindungsanfragen: ");
 			exit(1);
 		}
-
+		printf("Socket wurde angelegt.\nWarte auf Anfragen...\n");
 		return s_socket;
 	}
 
