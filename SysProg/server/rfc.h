@@ -9,6 +9,7 @@
 
 #ifndef RFC_H
 #define RFC_H
+#include <stdint.h>
 
 //#include "common/question.h"
 
@@ -45,7 +46,7 @@ struct packetError {
 	header head;
 	error err;
 };
-typedef union packetError packetError;
+typedef struct packetError packetError;
 
 #pragma pack(0)
 
