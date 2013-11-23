@@ -17,34 +17,36 @@ struct header {
 	uint8_t type;
 	uint16_t length;
 };
-//typedef struct header header;
+typedef struct header header;
 
 
 union packetData{
 	char playername[32];
 	char filename[32];
+	unsigned int score;
 	uint8_t ID;
 };
-//typedef union packetData packetData;
+typedef union packetData packetData;
 
 struct packet{
 	struct header head;
 	union packetData data;
 
 };
-//typedef struct packet packet;
+typedef struct packet packet;
 
 struct error {
 	uint8_t subtype;
 	char message [];
 };
-//typedef struct error error;
+typedef struct error error;
 
 struct packetError {
-	struct header head;
-	struct error err;
+	header head;
+	const head.type = 255;
+	error err;
 };
-//typedef union packetError packetError;
+typedef union packetError packetError;
 
 #pragma pack(0)
 

@@ -27,7 +27,8 @@ char buffer[BLOCKSIZE];
 
 size_t MESSAGE = 64;
 size_t DATA = 1024;
-pthread_t CLIENT[MAX_CLIENTS];
+pthread_t CLIENT[MAX_CLIENTS-1];
+packetData playerlist[MAX_CLIENTS-1];
 static struct sockaddr_in server_in;
 
 void LoginInit(int port) {
@@ -41,8 +42,8 @@ void ClientInit(int _create_socket) {
 
 	socklen_t addrlen;
 	char message[64] = "Verbindung hergestellt. Bitte Login-Daten eingeben.";
-	struct packetError errorPacket;
-	struct packet packet[MAX_CLIENTS];
+	packetError errorPacket;
+	packet loginrcv, loginrsp;
 	int client_socket[MAX_CLIENTS]; //asdasdsdasdsad
 	int client_id;
 
@@ -51,26 +52,52 @@ void ClientInit(int _create_socket) {
 			client_socket[client_id] = accept(_create_socket, (struct sockaddr *) &server_in, &addrlen);
 			if (client_socket[client_id] < 0)
 				perror("Fehler beim Verbinden mit Socket: ");
+			if (client_id == MAX_CLIENTS) {
+				printf("Maximale Anzahl an Clients erreicht! Client wird informiert...");
+				errorPacket.err.message = "Maximale Anzahl an Clients erreicht. Pech!";
+				errorPacket.head.length = sizeof(errorPacket.error.message+1);
+				errorPacket.err.subtype = 0;
+				send(client_socket[client_id], errorPacket, sizeof(errorPacket), 0);
+				close(client_socket[client_id]);
+			}
 			else {
-				if (send(client_socket[client_id], message, sizeof(message)) < 0)
+				if (send(client_socket[client_id], message, sizeof(message),0) < 0)
 					perror("Datenverlust beim Senden");
 				else {
-					printf("Daten vollstaendig gesendet. Warte auf Login-Request vom Client...");
-					if (recv(client_socket[client_id], (packet) & packet[client_id], sizeof(packet)) < 0)
+					printf("Warte auf Login-Request vom Client...");
+					if (recv(client_socket[client_id], (packet) &loginrcv, sizeof(loginrcv),0) < 0)
 						perror("Daten konnten nicht gelesen werden!");
 					else {
-						if (sizeof(packet.data) > 32) {
-							printf("Benutzername zu lang. Client wird informiert...\n");
-							errorPacket.
-							send(client_socket[client_id], errorPacket,sizeof(errorPacket));
+						int check = 1;
+						int true = 1;
+						int i;
+						while(check){
+							for(i = 0; i < MAX_CLIENTS-1; i++) {
+								if( playerlist[i].playername == loginrcv.data.playername){
+									errorPacket.err.message = "Player bereits angemeldet.";
+									errorPacket.head.length = sizeof(errorPacket.error.message+1);
+									errorPacket.err.subtype = 0;
+									send(client_socket[client_id], errorPacket, sizeof(errorPacket), 0);
+									i = MAX_CLIENTS-1;
+									true = 0;
+								}
+							}
+							if(true) {
+								playerlist[client_id] = packet.packetData;
+								playlist[client_id].ID = client_id;
+								loginrsp.head.type = 2;
+								loginrsp.head.length = 1;
+								loginrsp.data.ID = client_id;
+
+								send(client_socket[client_id], loginrsp, sizeof(loginrsp), 0);
+								client_id++;
+								check = 0;
+							}
 						}
-						printf("Nachricht empfangen: %s\n", buffer);
-						client_id++;
 					}
 				}
 			}
-			printf("Maximale Anzahl an Clients erreicht!");
-		} while (client_id < MAX_CLIENTS);
+		} while (client_id <= MAX_CLIENTS);
 	}
 
 	int ServerInit(int _port) {

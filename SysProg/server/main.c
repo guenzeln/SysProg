@@ -20,9 +20,9 @@ int main(int argc, char *argv[]) {
         exit(1);
     }
 
-    /*setProgName(argv[0]);
+    setProgName(argv[0]);
     debugEnable();
-    infoPrint("Server Gruppe 10");*/
+    infoPrint("Server Gruppe 10");
 
     LoginInit(atoi(argv[1]));
 

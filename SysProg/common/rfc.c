@@ -11,3 +11,10 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include "rfc.h"
+
+void SendPacket (int type, int socket) {
+
+	switch(type) {
+	case '2':
+	}
+}
