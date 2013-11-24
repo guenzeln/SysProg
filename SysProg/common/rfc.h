@@ -9,6 +9,7 @@
 
 #ifndef RFC_H
 #define RFC_H
+#include <stdint.h>
 
 //#include "common/question.h"
 
@@ -23,7 +24,7 @@ typedef struct header header;
 union packetData{
 	char playername[32];
 	char filename[32];
-	unsigned int score;
+	//unsigned int score;
 	uint8_t ID;
 };
 typedef union packetData packetData;
@@ -45,7 +46,7 @@ struct packetError {
 	header head;
 	error err;
 };
-typedef union packetError packetError;
+typedef struct packetError packetError;
 
 #pragma pack(0)
 

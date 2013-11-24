@@ -7,7 +7,7 @@
  * main.c: Hauptprogramm des Clients
  */
 
-#include "common/util.h"
+#include "../common/util.h"
 #include "gui/gui_interface.h"
 #include <stdio.h>
 #include <string.h>
@@ -16,7 +16,7 @@
 #include <netinet/in.h>
 #include <netdb.h>
 #include <unistd.h>
-#include "common/rfc.h"
+#include "../common/rfc.h"
 #include <arpa/inet.h>
 
 #define MAX_LENGTH 1024

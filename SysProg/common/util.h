@@ -15,7 +15,7 @@
  * der Argumente von debugPrint. Damit andere Compiler sich nicht beschweren,
  * definieren wir auf diesen __attribute__ als leeres Makro. */
 #ifndef __GNUC__
-#  define  __attribute__(x)  /* leer */
+# define  __attribute__(x)  /* leer */
 #endif
 
 void setProgName(const char *argv0);
