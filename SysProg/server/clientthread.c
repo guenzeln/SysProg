@@ -8,3 +8,9 @@
  */
 
 #include "clientthread.h"
+
+
+void StartGame() {
+	//if(isErsterSpiel)
+		//isSpielleiter;
+}

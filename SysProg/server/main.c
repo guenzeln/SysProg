@@ -15,6 +15,7 @@ int main(int argc, char *argv[]) {
     infoPrint("Server Gruppe 10");
 
 
+
     LoginInit(atoi(argv[1]));
 
 

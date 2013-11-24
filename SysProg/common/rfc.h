@@ -9,6 +9,19 @@
 
 #ifndef RFC_H
 #define RFC_H
+#define LOGINREQUEST     1
+#define LOGINRESPONSE    2
+#define CATALOGREQUEST   3
+#define CATALOGRESPONSE  4
+#define CATALOGCHANGE    5
+#define PLAYERLIST_RFC   6
+#define STARTGAME        7
+#define QUESTIONREQUEST  8
+#define QUESTION_RFC     9
+#define QUESTIONANSWERED 10
+#define QUESTIONRESULT   11
+#define GAMEOVER         12
+#define ERRORWARNING     255
 #include <stdint.h>
 
 //#include "common/question.h"

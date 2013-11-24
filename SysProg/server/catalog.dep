@@ -1,5 +1,5 @@
 server/catalog.o: server/catalog.c common/server_loader_protocol.h \
- server/catalog.h
+server/catalog.h
 server/catalog.c:
 common/server_loader_protocol.h:
 server/catalog.h:
