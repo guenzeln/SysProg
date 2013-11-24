@@ -32,10 +32,10 @@ pthread_t c_thread[MAX_CLIENTS-1];
 packetData playerlist[MAX_CLIENTS-1];
 static struct sockaddr_in server, client;
 
-void LoginInit(int port) {
+void LoginInit() {
 
-	int create_socket;
-	create_socket = ServerInit(port);
+	int create_socket = ServerInit();
+	create_socket = ServerInit();
 	ClientInit(create_socket);
 
 }
@@ -83,7 +83,7 @@ void ClientInit(int _create_socket) {
 	}
 }
 
-int ServerInit(int _port) {
+int ServerInit() {
 
 	int s_socket = socket(AF_INET, SOCK_STREAM, 0);
 
@@ -94,7 +94,7 @@ int ServerInit(int _port) {
 	memset(&server, 0, sizeof(server));
 	server.sin_family = AF_INET;
 	server.sin_addr.s_addr = htonl(INADDR_ANY );
-	server.sin_port = htons(_port);
+	server.sin_port = htons(PORT);
 
 	if (bind(s_socket, (struct sockaddr *) &server, sizeof(server)) < 0) {
 		perror("Socket konnte nicht an die Adresse gebunden werden: ");
