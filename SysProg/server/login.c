@@ -25,17 +25,16 @@
 
 
 int client_socket[MAX_CLIENTS];
-int client_id = 0;
-packetError errorPacket;
-packet loginrcv, loginrsp;
+static int client_id = 0;
+ERROR errorPacket;
+PACKET loginrcv, loginrsp, loginerr;
 pthread_t c_thread[MAX_CLIENTS-1];
-packetData playerlist[MAX_CLIENTS-1];
+PLAYER playerlist[MAX_CLIENTS-1];
 static struct sockaddr_in server, client;
 
 void LoginInit() {
 
 	int create_socket = ServerInit();
-	//create_socket = ServerInit();
 	ClientInit(create_socket);
 
 }
@@ -53,25 +52,27 @@ void ClientInit(int _create_socket) {
 				perror("Fehler beim Verbinden mit Socket: ");
 			if (client_id == MAX_CLIENTS) {
 					infoPrint("Maximale Anzahl an Clients erreicht! Client wird informiert...");
-					errorPacket.head.type = 255;
-					//errorPacket.err.message = "Maximale Anzahl an Clients erreicht. Pech!";
-					errorPacket.head.length = sizeof(errorPacket.err.message+1);
-					errorPacket.err.subtype = 0;
-					send(client_socket[client_id], &errorPacket, sizeof(errorPacket), 0);
+					errorPacket.subtype = 0;
+					errorPacket.message = "Maximale Anzahl an Clients erreicht. Pech!";
+					loginerr.head.type = 255;
+					loginerr.head.length = sizeof(errorPacket.message+1);
+					send(client_socket[client_id], &loginerr, sizeof(loginerr), 0);
 					close(client_socket[client_id]);
 			}
 			else {
 				infoPrint("Warte auf Login-Request vom Client...");
-				if (recv(client_socket[client_id], &loginrcv.head,3,0) < 0)
-
+				if (recv(client_socket[client_id], &loginrcv.head, 3, 0) < 0)
 					perror("Daten konnten nicht gelesen werden!");
 				else {
 					recv(client_socket[client_id], &loginrcv.data,loginrcv.head.length,0);
 					infoPrint("Login-Daten erhalten\n");
-					//printf("Client-ID: %d", loginrcv.data.ID);
-					if(CheckData() == -1)
+					if(CheckData() == -1) {
 						infoPrint("Spieler bereits angemeldet. Login abgewiesen.");
+						send(client_socket[client_id], &loginerr, sizeof(loginerr), 0);
+					}
 					else
+						send(client_socket[client_id], &loginrsp, sizeof(loginrsp.head) + loginrsp.head.length, 0);
+						infoPrint("Login response gesendet!");
 						/*if(pthread_create(&c_thread[client_id], NULL, &StartGame, NULL)!=0)
 							infoPrint("Konnte keinen Client-Thread erzeugen");*/
 						client_id++;
@@ -114,38 +115,28 @@ int ServerInit() {
 
 int CheckData() {
 
-	int check = 1;
-	int true = 1;
 	int i;
 
-
-	while (check) {
-		for (i = 0; i < MAX_CLIENTS - 1; i++) {
-			if (playerlist[i].playername == loginrcv.data.playername) {
-				errorPacket.head.type = 255;
-				//errorPacket.err.message = "Spieler mit diesem Benutzernamen bereits angemeldet.";
-				errorPacket.head.length = sizeof(errorPacket.err.message + 1);
-				errorPacket.err.subtype = 0;
-				send(client_socket[client_id], &errorPacket, sizeof(errorPacket), 0);
-				i = MAX_CLIENTS - 1;
-				true = 0;
-				return -1;
-			}
-		}
-		if (true) {
-			playerlist[client_id] = loginrcv.data;
-			playerlist[client_id].ID = client_id;
-			loginrsp.head.type = 2;
-			loginrsp.head.length = htons(1);
-			loginrsp.data.ID = client_id;
-			printf("Client-ID : %d",client_id);
-			send(client_socket[client_id], &loginrsp,sizeof(loginrsp.head)+loginrsp.head.length, 0);
-			infoPrint("Login response gesendet!");
-			check = 0;
-			return 1;
+	for (i = 0; i < MAX_CLIENTS - 1; i++) {
+		if (strncmp(playerlist[i].playername, loginrcv.data.playername, 32) == 0) {
+			errorPacket.subtype = 0;
+			errorPacket.message = "Spieler mit diesem Benutzernamen bereits angemeldet.";
+			loginerr.head.type = 255;
+			loginerr.head.length = htons(sizeof(errorPacket.message + 1));
+			return -1;
 		}
 	}
+
+	playerlist[client_id].playername = loginrcv.data.playername;
+	playerlist[client_id].player_id = client_id;
+	playerlist[client_id].score = 0;
+	loginrsp.head.type = 2;
+	loginrsp.head.length = htons(1);
+	loginrsp.data.ID = client_id;
+	printf("Client-ID : %d", client_id);
+	return 0;
 }
+
 	/*int loginThread(int client) {
 
 		if (client == 1)
