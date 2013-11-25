@@ -66,7 +66,7 @@ typedef struct header HEADER;
 
 struct error {
 	uint8_t subtype;
-	char message [255];
+	char *message;
 };
 typedef struct error ERROR;
 

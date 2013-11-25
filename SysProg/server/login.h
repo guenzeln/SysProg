@@ -10,7 +10,7 @@
 #ifndef LOGIN_H
 #define LOGIN_H
 
-void ClientInit(int client_socket);
+void ClientInit(int);
 int ServerInit (void);
 void LoginInit();
 int CheckData();
