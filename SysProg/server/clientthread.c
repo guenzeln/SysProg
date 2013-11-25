@@ -8,9 +8,8 @@
  */
 
 #include "clientthread.h"
-
+#include <stdio.h>
 
 void StartGame() {
-	//if(isErsterSpiel)
-		//isSpielleiter;
+	printf("Client-Thread erzeugt");
 }

@@ -18,6 +18,8 @@ int main(int argc, char *argv[]) {
     debugEnable();
     infoPrint("Server Gruppe 10");
 
+    //fork
+
     PORT = atoi(argv[1]);
 
     if(pthread_create(&login_thread, NULL, (void*)&LoginInit, NULL) != 0) {

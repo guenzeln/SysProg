@@ -27,7 +27,7 @@
 int client_socket[MAX_CLIENTS];
 static int client_id = 0;
 ERROR errorPacket;
-PACKET loginrcv, loginrsp, loginerr;
+PACKET loginrcv, loginrsp, loginerr, players;
 pthread_t c_thread[MAX_CLIENTS-1];
 PLAYER playerlist[MAX_CLIENTS-1];
 static struct sockaddr_in server, client;
@@ -53,31 +53,38 @@ void ClientInit(int _create_socket) {
 			if (client_id == MAX_CLIENTS) {
 					infoPrint("Maximale Anzahl an Clients erreicht! Client wird informiert...");
 					errorPacket.subtype = 0;
-					errorPacket.message = "Maximale Anzahl an Clients erreicht. Pech!";
+					strncpy(errorPacket.message, "Maximale Anzahl an Clients erreicht. Pech!", 255);
 					loginerr.head.type = 255;
-					loginerr.head.length = sizeof(errorPacket.message+1);
+					loginerr.head.length = htons(sizeof(errorPacket.message+1));
 					send(client_socket[client_id], &loginerr, sizeof(loginerr), 0);
 					close(client_socket[client_id]);
+					client_id--;
 			}
 			else {
 				infoPrint("Warte auf Login-Request vom Client...");
-				if (recv(client_socket[client_id], &loginrcv.head, 3, 0) < 0)
+				if (recv(client_socket[client_id], &loginrcv.head, sizeof(loginrcv.head), 0) < 0)
 					perror("Daten konnten nicht gelesen werden!");
 				else {
 					recv(client_socket[client_id], &loginrcv.data,loginrcv.head.length,0);
 					infoPrint("Login-Daten erhalten\n");
 					if(CheckData() == -1) {
 						infoPrint("Spieler bereits angemeldet. Login abgewiesen.");
-						send(client_socket[client_id], &loginerr, sizeof(loginerr), 0);
+						send(client_socket[client_id], &loginerr, sizeof(loginerr.head)+loginerr.head.length, 0);
 					}
-					else
-						send(client_socket[client_id], &loginrsp, sizeof(loginrsp.head) + loginrsp.head.length, 0);
+					else {
+						send(client_socket[client_id], &loginrsp, sizeof(loginrsp.head)+loginrsp.head.length, 0);
 						infoPrint("Login response gesendet!");
-						/*if(pthread_create(&c_thread[client_id], NULL, &StartGame, NULL)!=0)
-							infoPrint("Konnte keinen Client-Thread erzeugen");*/
+						players.head.type = 6;
+						players.head.length = client_id * 37;
+						players.data.playerlist[0] = playerlist[0];
+						players.data.playerlist[1] = playerlist[1];
+						send(client_socket[client_id] ,&players, sizeof(players.head)+players.head.length, 0);
+						//send()
+						if(pthread_create(&c_thread[client_id], NULL,(void *) &StartGame, NULL)!=0)
+							infoPrint("Konnte keinen Client-Thread erzeugen");
 						client_id++;
 						infoPrint("Warte auf weitere Anfragen...");
-
+					}
 				}
 			}
 		} while (client_id <= MAX_CLIENTS);
@@ -120,14 +127,14 @@ int CheckData() {
 	for (i = 0; i < MAX_CLIENTS - 1; i++) {
 		if (strncmp(playerlist[i].playername, loginrcv.data.playername, 32) == 0) {
 			errorPacket.subtype = 0;
-			errorPacket.message = "Spieler mit diesem Benutzernamen bereits angemeldet.";
+			strncpy(errorPacket.message, "Spieler mit diesem Benutzernamen bereits angemeldet.", 255);
 			loginerr.head.type = 255;
 			loginerr.head.length = htons(sizeof(errorPacket.message + 1));
 			return -1;
 		}
 	}
 
-	playerlist[client_id].playername = loginrcv.data.playername;
+	strncpy(playerlist[client_id].playername, loginrcv.data.playername, 32);
 	playerlist[client_id].player_id = client_id;
 	playerlist[client_id].score = 0;
 	loginrsp.head.type = 2;
