@@ -121,9 +121,10 @@ int main(int argc, char **argv) {
 	}
 
 	init.head.type = 1;
+
 	init.head.length = htons(strlen(Name));
 	strncpy(init.data.playername, Name, strlen(Name));
-
+	printf("%d \n", init.head.length);
 	printf("%d  %d  %s \n", init.head.type, init.head.length,
 			init.data.playername);
 
@@ -135,7 +136,7 @@ int main(int argc, char **argv) {
 
 	printf("%d gesendet \n", a);
 	struct packet answer;
-
+	printf("Vor WHILE \n");
 	while(read(s, &answer.head, 3)>0){			//Auf antwort des servers ?warten
 	read(s, &answer.data, answer.head.length);
 
@@ -150,7 +151,7 @@ int main(int argc, char **argv) {
 		}
 		break;
 
-	case 3:
+	case 6:
 		printf("Spielerliste\n");
 	}
 	}
