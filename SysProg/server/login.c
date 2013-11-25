@@ -29,7 +29,7 @@ static int client_id = 0;
 ERROR errorPacket;
 PACKET loginrcv, loginrsp, loginerr, players;
 pthread_t c_thread[MAX_CLIENTS-1];
-PLAYER playerlist[MAX_CLIENTS-1];
+PLAYER user_data[MAX_CLIENTS-1];
 static struct sockaddr_in server, client;
 
 void LoginInit() {
@@ -41,6 +41,7 @@ void LoginInit() {
 
 void ClientInit(int _create_socket) {
 	socklen_t addrlen;
+	int i;
 
 
 
@@ -75,8 +76,12 @@ void ClientInit(int _create_socket) {
 						send(client_socket[client_id], &loginrsp, sizeof(loginrsp.head)+sizeof(loginrsp.data), 0);
 						infoPrint("Login response gesendet!");
 						players.head.type = 6;
-						players.head.length = htons(37);
-						players.data.playerlist[0] = playerlist[client_id];
+						players.head.length = htons((client_id+1)*37);
+						for (i = 0; i < MAX_CLIENTS-1; i++) {
+							players.data.playerlist[i].player_id = user_data[i].player_id;
+							strncpy(players.data.playerlist[i].playername, user_data[i].playername, 32);
+							players.data.playerlist[i].score = user_data[i].score;
+						}
 						send(client_socket[client_id] ,&players, sizeof(players.head)+sizeof(players.data), 0);
 						if(pthread_create(&c_thread[client_id], NULL,(void *) &StartGame, NULL)!=0)
 							infoPrint("Konnte keinen Client-Thread erzeugen");
@@ -123,7 +128,7 @@ int CheckData() {
 	int i;
 
 	for (i = 0; i < MAX_CLIENTS - 1; i++) {
-		if (strncmp(playerlist[i].playername, loginrcv.data.playername, 32) == 0) {
+		if (strncmp(user_data[i].playername, loginrcv.data.playername, 32) == 0) {
 			errorPacket.subtype = 0;
 			strncpy(errorPacket.message, "Spieler mit diesem Benutzernamen bereits angemeldet.", 255);
 			loginerr.head.type = 255;
@@ -131,14 +136,14 @@ int CheckData() {
 			return -1;
 		}
 	}
-
-	strncpy(playerlist[client_id].playername, loginrcv.data.playername, 32);
-	playerlist[client_id].player_id = client_id;
-	playerlist[client_id].score = htons(0);
 	loginrsp.head.type = 2;
 	loginrsp.head.length = htons(1);
 	loginrsp.data.ID = client_id;
-	printf("Client-ID : %d", client_id);
+	strncpy(user_data[client_id].playername, loginrcv.data.playername, 32);
+	printf("Player %s ist jetzt verbunden\n", user_data[client_id].playername);
+	user_data[client_id].player_id = client_id;
+	user_data[client_id].score = htons(0);
+	printf("Client-ID : %d Score: %i", client_id, user_data[client_id].score);
 	return 0;
 }
 
