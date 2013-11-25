@@ -12,5 +12,5 @@
 #define MAX_CLIENTS 5
 
 /* ... */
-packetData playerlist[MAX_CLIENTS-1];
+//packetData playerlist[MAX_CLIENTS-1];
 #endif

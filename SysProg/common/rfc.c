@@ -26,4 +26,4 @@ void SendPacket (int type, int socket) {
 
 	}
 }
-/*
+*/

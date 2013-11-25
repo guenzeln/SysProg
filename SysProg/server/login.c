@@ -35,7 +35,7 @@ static struct sockaddr_in server, client;
 void LoginInit() {
 
 	int create_socket = ServerInit();
-	create_socket = ServerInit();
+	//create_socket = ServerInit();
 	ClientInit(create_socket);
 
 }
@@ -62,10 +62,13 @@ void ClientInit(int _create_socket) {
 			}
 			else {
 				infoPrint("Warte auf Login-Request vom Client...");
-				if (recv(client_socket[client_id], &loginrcv, sizeof(loginrcv),0) < 0)
+				if (recv(client_socket[client_id], &loginrcv.head,3,0) < 0)
+
 					perror("Daten konnten nicht gelesen werden!");
 				else {
+					recv(client_socket[client_id], &loginrcv.data,loginrcv.head.length,0);
 					infoPrint("Login-Daten erhalten\n");
+					//printf("Client-ID: %d", loginrcv.data.ID);
 					if(CheckData() == -1)
 						infoPrint("Spieler bereits angemeldet. Login abgewiesen.");
 					else
@@ -114,7 +117,7 @@ int CheckData() {
 	int check = 1;
 	int true = 1;
 	int i;
-	int *value;
+
 
 	while (check) {
 		for (i = 0; i < MAX_CLIENTS - 1; i++) {
@@ -133,9 +136,10 @@ int CheckData() {
 			playerlist[client_id] = loginrcv.data;
 			playerlist[client_id].ID = client_id;
 			loginrsp.head.type = 2;
-			loginrsp.head.length = 1;
+			loginrsp.head.length = htons(1);
 			loginrsp.data.ID = client_id;
-			send(client_socket[client_id], &loginrsp, sizeof(loginrsp), 0);
+			printf("Client-ID : %d",client_id);
+			send(client_socket[client_id], &loginrsp,sizeof(loginrsp.head)+loginrsp.head.length, 0);
 			infoPrint("Login response gesendet!");
 			check = 0;
 			return 1;
