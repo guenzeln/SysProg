@@ -21,7 +21,7 @@
 #include <arpa/inet.h>
 
 
-void listenerMain(int* s){
+void listenerMain(int* s){//test
 		PACKET answer;
 		int i=0;
 

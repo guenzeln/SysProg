@@ -122,7 +122,7 @@ int ServerInit() {
 	return s_socket;
 }
 
-
+/*Überprüfe Login-Daten: Wenn Name schon vorhanden, return -1. Andernfalls, return 0*/
 int CheckData() {
 
 	int i;
