@@ -11,3 +11,19 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include "rfc.h"
+
+
+/*void SendMessage(int type, int socket) {
+
+
+	if (type==1) {
+		packetData LoginRequest;
+
+void SendPacket (int type, int socket) {
+
+	switch(type) {
+	case '2':
+
+	}
+}
+/*

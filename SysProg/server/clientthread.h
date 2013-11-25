@@ -11,5 +11,5 @@
 #define CLIENTTHREAD_H
 
 /* ... */
-
+void StartGame(void * name);
 #endif

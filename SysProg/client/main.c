@@ -7,7 +7,7 @@
  * main.c: Hauptprogramm des Clients
  */
 
-#include "common/util.h"
+#include "../common/util.h"
 #include "gui/gui_interface.h"
 #include <stdio.h>
 #include <string.h>
@@ -16,7 +16,7 @@
 #include <netinet/in.h>
 #include <netdb.h>
 #include <unistd.h>
-#include "common/rfc.h"
+#include "../common/rfc.h"
 #include <arpa/inet.h>
 
 #define MAX_LENGTH 1024
@@ -46,7 +46,7 @@ int main(int argc, char **argv) {
 			a = strlen(argv[i + 1]);
 
 			if (a > 32) {					// Länge des Namens Prüfen
-				printf("%d \n", a);
+				printf("%d \n", a);			//Das ist doch Aufgabe des Servers!?
 				printf("Name zu lang \n");
 				exit(0);
 			} else {
@@ -106,7 +106,7 @@ int main(int argc, char **argv) {
 	struct hostent *hostAddress;
 
 	client.sin_family = AF_INET;		// Ipv4
-	hostAddress = gethostbyname(server_addr); // adrestruktur zur Ip bekommen
+	hostAddress = gethostbyname(server_addr); // adresstruktur zur Ip bekommen
 	if (hostAddress == NULL ) {
 		printf("Host not found \n");
 		exit(0);
