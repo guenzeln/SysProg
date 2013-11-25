@@ -9,7 +9,8 @@
 
 #include "clientthread.h"
 #include <stdio.h>
+#include "../common/util.h"
 
 void StartGame() {
-	printf("Client-Thread erzeugt");
+	infoPrint("Client-Thread erzeugt");
 }

@@ -69,17 +69,15 @@ void ClientInit(int _create_socket) {
 					infoPrint("Login-Daten erhalten\n");
 					if(CheckData() == -1) {
 						infoPrint("Spieler bereits angemeldet. Login abgewiesen.");
-						send(client_socket[client_id], &loginerr, sizeof(loginerr.head)+loginerr.head.length, 0);
+						send(client_socket[client_id], &loginerr, sizeof(loginerr.head)+sizeof(loginerr.data), 0);
 					}
 					else {
-						send(client_socket[client_id], &loginrsp, sizeof(loginrsp.head)+loginrsp.head.length, 0);
+						send(client_socket[client_id], &loginrsp, sizeof(loginrsp.head)+sizeof(loginrsp.data), 0);
 						infoPrint("Login response gesendet!");
 						players.head.type = 6;
-						players.head.length = client_id * 37;
-						players.data.playerlist[0] = playerlist[0];
-						players.data.playerlist[1] = playerlist[1];
-						send(client_socket[client_id] ,&players, sizeof(players.head)+players.head.length, 0);
-						//send()
+						players.head.length = htons(37);
+						players.data.playerlist[0] = playerlist[client_id];
+						send(client_socket[client_id] ,&players, sizeof(players.head)+sizeof(players.data), 0);
 						if(pthread_create(&c_thread[client_id], NULL,(void *) &StartGame, NULL)!=0)
 							infoPrint("Konnte keinen Client-Thread erzeugen");
 						client_id++;
@@ -136,7 +134,7 @@ int CheckData() {
 
 	strncpy(playerlist[client_id].playername, loginrcv.data.playername, 32);
 	playerlist[client_id].player_id = client_id;
-	playerlist[client_id].score = 0;
+	playerlist[client_id].score = htons(0);
 	loginrsp.head.type = 2;
 	loginrsp.head.length = htons(1);
 	loginrsp.data.ID = client_id;
