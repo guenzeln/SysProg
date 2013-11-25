@@ -18,8 +18,8 @@ PACKET createLoginRe(char *name){
 
 		init.head.length = htons(strlen(name));
 		strncpy(init.data.playername, name, strlen(name));
-		printf("%d \n", init.head.length);
-		printf("%d  %d  %s \n", init.head.type, init.head.length,
+		printf("%d \n", ntohs(init.head.length));
+		printf("%d  %d  %s \n", init.head.type, ntohs(init.head.length),
 				init.data.playername);
 		return init;
 }
