@@ -92,5 +92,8 @@ typedef struct packet PACKET;
 
 #pragma pack(0)
 
+PACKET createLoginRe(char[]);
+int s;
+
 
 #endif

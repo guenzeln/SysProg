@@ -12,5 +12,7 @@
 
 /* ... */
 
+void listenerMain(int*);
+
 #endif
 

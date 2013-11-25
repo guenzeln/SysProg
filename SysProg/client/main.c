@@ -16,10 +16,13 @@
 #include <netinet/in.h>
 #include <netdb.h>
 #include <unistd.h>
+#include <pthread.h>
 #include "../common/rfc.h"
 #include <arpa/inet.h>
+#include "listener.h"
 
 #define MAX_LENGTH 1024
+
 
 int main(int argc, char **argv) {
 
@@ -28,7 +31,6 @@ int main(int argc, char **argv) {
 	int i, a;
 	char server_addr[16] = "127.0.0.1";
 	int port = 54321; // Standard Port
-	char buf[MAX_LENGTH];
 	struct packet init;
 
 	if (argc == 1) {
@@ -86,7 +88,7 @@ int main(int argc, char **argv) {
 					printf("Port zu lang \n");
 					exit(0);
 				} else {
-					port = argv[i];
+					port = atoi(argv[i+1]);
 
 					printf("Port ist %d \n", port);
 				}
@@ -105,6 +107,8 @@ int main(int argc, char **argv) {
 	struct sockaddr_in client;
 	struct hostent *hostAddress;
 
+	printf("socket: %d\n",s);
+
 	client.sin_family = AF_INET;		// Ipv4
 	hostAddress = gethostbyname(server_addr); // adresstruktur zur Ip bekommen
 	if (hostAddress == NULL ) {
@@ -120,44 +124,27 @@ int main(int argc, char **argv) {
 		printf("connect failed \n");
 	}
 
-	init.head.type = 1;
+	init=createLoginRe(Name);
 
-	init.head.length = htons(strlen(Name));
-	strncpy(init.data.playername, Name, strlen(Name));
-	printf("%d \n", init.head.length);
-	printf("%d  %d  %s \n", init.head.type, init.head.length,
-			init.data.playername);
-
-	a = write(s, &init, strlen(Name) + sizeof(init.head));//Login Request senden
+	a = write(s, &init, ntohs(init.head.length) + sizeof(init.head));//Login Request senden
 
 	//if (a != init.head.length + 2) {
 	//	printf("stimmt nicht überein \n");
 	//}
 
 	printf("%d gesendet \n", a);
-	struct packet answer;
-	printf("Vor WHILE \n");
-	while(read(s, &answer.head, 3)>0){			//Auf antwort des servers ?warten
-	read(s, &answer.data, answer.head.length);
 
+	pthread_t listener;
 
-
-	switch (answer.head.type) {
-
-	case 2:
-		printf("loginAnswer\n");
-		if (answer.data.ID == 0) {
-			printf("Du bist Spielleiter\n");
-		}
-		break;
-
-	case 6:
-		printf("Spielerliste\n");
+	if(pthread_create(&listener,NULL,(void*)&listenerMain,&s)!=0){
+		infoPrint("Konnte keinen Login-Thread erzeugen");
+		exit(1);
 	}
-	}
+
 	preparation_showWindow();
+	guiMain();
 
-	preparation_addPlayer(Name);
+	//game_highlightPlayer(0);
 	guiMain();
 	/* Resourcen freigeben usw... */
 	guiDestroy();
