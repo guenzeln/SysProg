@@ -54,7 +54,7 @@ int main(int argc, char **argv) {
 			} else {
 				strncpy(Name, argv[i + 1], 32);
 
-				printf("Name ist %s \n", Name);
+				infoPrint("Name ist:",Name);
 			}
 		}
 		if (strcmp("-s", argv[i]) == 0) {// Ip adresse falls angegeben auslesen
@@ -133,6 +133,27 @@ int main(int argc, char **argv) {
 	//}
 
 	printf("%d gesendet \n", a);
+	PACKET answer;
+	if(read(s,&answer.head,3)<0){
+		perror("Lesen fehlgeschlagen:");
+	}
+	read(s,&answer.data,ntohs(answer.head.length));
+	switch(answer.head.type){
+
+		case 2:
+			printf("loginAnswer\n");
+			if (answer.data.ID == 0) {
+			printf("Du bist Spielleiter\n");
+			}
+			infoPrint("Listener wird gestartet");
+			break;
+		case 255:
+			printf("Login fehlgeschlagen, Message: %s",answer.data.error.message);
+			exit(2);
+		default:
+			printf("Keine Gültige Antwort erhalten");
+			exit(3);
+	}
 
 	pthread_t listener;
 

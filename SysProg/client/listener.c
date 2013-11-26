@@ -24,24 +24,18 @@
 void listenerMain(int* s){//test
 		PACKET answer;
 		int i=0;
+		PACKET empty;
+		memset(&empty,0,sizeof(empty));
 
 		printf("Vor WHILE \n");
+		printf("socket: %d\n",*s);
 
-		printf("socket: %d\n",s);
+
 
 
 		while(read(*s, &answer.head, 3)>=0){			//Auf antwort des servers ?warten
-		infoPrint("vor read");
 		read(*s, &answer.data, ntohs(answer.head.length));
-		infoPrint("nach read");
 		switch (answer.head.type) {
-
-		case 2:
-			printf("loginAnswer\n");
-			if (answer.data.ID == 0) {
-				printf("Du bist Spielleiter\n");
-			}
-			break;
 
 		case 6:
 			printf("Spielerliste\n");
@@ -52,11 +46,31 @@ void listenerMain(int* s){//test
 				char name[32];
 				strncpy(name,answer.data.playerlist[i].playername,32);
 				preparation_addPlayer(name);
-
-				//game_setPlayerScore(answer.data.playerlist[i].player_id+1,answer.data.playerlist[i].score);
 			}
+
+			printf("inhalt vorher: %s",answer.data.playerlist[0].playername);
+			answer=empty;
+			printf("jetzt inhalt: %s ",answer.data.playerlist[0].playername);
 			break;
+
+		case 255:
+
+			switch(answer.data.error.subtype){
+
+			case 0:	infoPrint("Warning");
+					infoPrint("fehler:",answer.data.error.message);
+					answer=empty;
+					break;
+
+			case 1:
+					infoPrint("fehler:",answer.data.error.message);
+					exit(4);
+
+			default:
+					infoPrint("ungültiger Subtype");
+					break;
 		}
 		}
 
+}
 }
