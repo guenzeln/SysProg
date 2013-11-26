@@ -22,7 +22,7 @@
 #include <string.h>
 #define MAX_CLIENTS 4
 
-PACKET loginrcv, loginrsp, loginerr, players;
+PACKET loginrcv, loginrsp, loginerr, players, empty;
 pthread_t c_thread[MAX_CLIENTS];
 PLAYER user_data[MAX_CLIENTS];
 static struct sockaddr_in server, client;
@@ -30,7 +30,7 @@ static int client_socket[MAX_CLIENTS];
 int client_id = 0;
 
 void LoginInit() {
-
+	memset(&empty,0, sizeof(empty));
 	int create_socket = ServerInit();
 	ClientInit(create_socket);
 
@@ -39,7 +39,7 @@ void LoginInit() {
 void ClientInit(int _create_socket) {
 	socklen_t addrlen;
 	int i;
-
+	char errorMessage [64] = "Maximale Anzahl an Clients erreicht. Pech!";
 
 
 
@@ -49,14 +49,15 @@ void ClientInit(int _create_socket) {
 			client_socket[client_id] = accept(_create_socket, (struct sockaddr *) &client, &addrlen);
 			if (client_socket[client_id] < 0)
 				perror("Fehler beim Verbinden mit Socket: ");
-			if (client_id == MAX_CLIENTS+1) {
+			if (client_id == MAX_CLIENTS) {
 					infoPrint("Maximale Anzahl an Clients erreicht! Client wird informiert...");
-					loginerr.data.error.subtype = 0;
-					strncpy(loginerr.data.error.message, "Maximale Anzahl an Clients erreicht. Pech!", 43);
+					loginerr.data.error.subtype = 1;
+					strncpy(loginerr.data.error.message, errorMessage, strlen(errorMessage)-1);
 					loginerr.head.type = 255;
-					loginerr.head.length = htons(sizeof(loginerr.data.error.message+1));
-					send(client_socket[client_id], &loginerr, sizeof(loginerr.head)+sizeof(loginerr.data), 0);
-					close(client_socket[client_id]);
+					loginerr.head.length = htons(sizeof(loginerr.data.error.message)+1);
+					send(client_socket[client_id], &loginerr, sizeof(loginerr.head)+ntohs(loginerr.head.length), 0);
+					//close(client_socket[client_id]);
+					printf("Socket %i wurde geschlossen", client_socket[client_id]);
 					client_id--;
 			}
 			else {
@@ -64,15 +65,14 @@ void ClientInit(int _create_socket) {
 				infoPrint("Warte auf Login-Request vom Client...");
 				if (recv(client_socket[client_id], &loginrcv.head, sizeof(loginrcv.head), 0) < 0)
 					perror("Daten konnten nicht gelesen werden!");
-				else {
+				else {	//Login-Request annehmen
 					recv(client_socket[client_id], &loginrcv.data,loginrcv.head.length,0);
 					infoPrint("Login-Daten erhalten\n");
 					if(CheckData() == -1) {
 						infoPrint("Spieler bereits angemeldet. Login abgewiesen.");
-						send(client_socket[client_id], &loginerr, sizeof(loginerr.head)+sizeof(loginerr.data), 0);
+						send(client_socket[client_id], &loginerr, sizeof(loginerr.head)+ntohs(loginerr.head.length), 0);
 					}
 					else {
-						printf("head %i data %i", sizeof(loginrsp.head),sizeof(loginrsp.data));
 						send(client_socket[client_id], &loginrsp,4, 0);
 						infoPrint("Login response gesendet!");
 						players.head.type = 6;
@@ -82,8 +82,6 @@ void ClientInit(int _create_socket) {
 							strncpy(players.data.playerlist[i].playername, user_data[i].playername, 32);
 							players.data.playerlist[i].score = user_data[i].score;
 						}
-
-						sleep(10);
 						printf("Client-Socket-Deskriptor ist %d\n", client_socket[client_id]);
 						for (i = 0; i <= client_id; i++) {
 							send(client_socket[i], &players, sizeof(players.head)+ntohs(players.head.length), 0);
@@ -131,23 +129,24 @@ int ServerInit() {
 
 /*Überprüfe Login-Daten: Wenn Name schon vorhanden, return -1. Andernfalls, return 0*/
 int CheckData() {
-
+	char errorMessage[64] = "Spieler mit diesem Benutzernamen bereits angemeldet.";
+	//char erase
 	int i;
 
 	for (i = 0; i < MAX_CLIENTS; i++) {
 		if (strncmp(user_data[i].playername, loginrcv.data.playername, 32) == 0) {
 			loginerr.data.error.subtype = 0;
-			strncpy(loginerr.data.error.message, "Spieler mit diesem Benutzernamen bereits angemeldet.", 64);
+			strncpy(loginerr.data.error.message,errorMessage, strlen(errorMessage)-1);
 			loginerr.head.type = 255;
-			loginerr.head.length = htons(sizeof(loginerr.data.error.message + 1));
+			loginerr.head.length = htons(sizeof(loginerr.data.error.message)+1);
 			return -1;
 		}
 	}
 	loginrsp.head.type = 2;
 	loginrsp.head.length = htons(1);
 	loginrsp.data.ID = (uint8_t) client_id;
-	strncpy(user_data[client_id].playername, loginrcv.data.playername, 32);
-	//DeleteString(loginrcv.data.playername);
+	strncpy(user_data[client_id].playername, loginrcv.data.playername, strlen(loginrcv.data.playername));
+	bzero(loginrcv.data.playername, sizeof(loginrcv.data.playername));
 	printf("Player %s ist jetzt verbunden\n", user_data[client_id].playername);
 	user_data[client_id].player_id = (uint8_t)client_id;
 	user_data[client_id].score = htonl(0);
@@ -155,12 +154,13 @@ int CheckData() {
 	return 0;
 }
 
-/*void DeleteString(char * playername) {
+void DeleteString(char * playername) {
 	int i;
+	char erase [32];
 	for (i = 0; i <= strlen(playername); i++) {
-		playername [i] = "";
+		strncpy(playername, erase,32);
 	}
-}*/
+}
 
 	/*int loginThread(int client) {
 
