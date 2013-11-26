@@ -11,10 +11,11 @@
 #define LOGIN_H
 
 void ClientInit(int);
-int ServerInit (void);
+int ServerInit ();
 void LoginInit();
 int CheckData();
-void DeleteString(char *);
+void SendError(int);
+
 
 /* ... */
 
