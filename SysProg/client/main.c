@@ -148,7 +148,8 @@ int main(int argc, char **argv) {
 			infoPrint("Listener wird gestartet");
 			break;
 		case 255:
-			printf("Login fehlgeschlagen, Message: %s",answer.data.error.message);
+			answer.data.error.message[ntohs(answer.head.length)]='\0';
+			printf("Login fehlgeschlagen, Message: %s \n",answer.data.error.message);
 			exit(2);
 		default:
 			printf("Keine Gültige Antwort erhalten");

@@ -58,12 +58,15 @@ void listenerMain(int* s){//test
 			switch(answer.data.error.subtype){
 
 			case 0:	infoPrint("Warning");
-					infoPrint("fehler:",answer.data.error.message);
+					answer.data.error.message[ntohs(answer.head.length)]='\0';
+					printf("fehler: s%\n",answer.data.error.message);
+					//guiShowErrorDialog(answer.data.error.message,0);
 					answer=empty;
 					break;
 
 			case 1:
-					infoPrint("fehler:",answer.data.error.message);
+				    answer.data.error.message[ntohs(answer.head.length)]='\0';
+					printf("fehler:%s \n",answer.data.error.message);
 					exit(4);
 
 			default:
