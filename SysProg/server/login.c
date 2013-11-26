@@ -67,26 +67,32 @@ void ClientInit(int _create_socket) {
 				else {
 					recv(client_socket[client_id], &loginrcv.data,loginrcv.head.length,0);
 					infoPrint("Login-Daten erhalten\n");
-					if(CheckData(client_id) == -1) {
+					if(CheckData() == -1) {
 						infoPrint("Spieler bereits angemeldet. Login abgewiesen.");
 						send(client_socket[client_id], &loginerr, sizeof(loginerr.head)+sizeof(loginerr.data), 0);
 					}
 					else {
-						sleep(20);
-						send(client_socket[client_id], &loginrsp, sizeof(loginrsp.head)+sizeof(loginrsp.data), 0);
+						printf("head %i data %i", sizeof(loginrsp.head),sizeof(loginrsp.data));
+						send(client_socket[client_id], &loginrsp,4, 0);
 						infoPrint("Login response gesendet!");
 						players.head.type = 6;
 						players.head.length = htons((client_id+1)*37);
-						for (i = 0; i < MAX_CLIENTS; i++) {
+						for (i = 0; i <= client_id; i++) {
 							players.data.playerlist[i].player_id = user_data[i].player_id;
 							strncpy(players.data.playerlist[i].playername, user_data[i].playername, 32);
 							players.data.playerlist[i].score = user_data[i].score;
 						}
-						send(client_socket[client_id] ,&players, sizeof(players.head)+sizeof(players.data), 0);
+
+						sleep(10);
+						printf("Client-Socket-Deskriptor ist %d\n", client_socket[client_id]);
+						for (i = 0; i <= client_id; i++) {
+							send(client_socket[i], &players, sizeof(players.head)+ntohs(players.head.length), 0);
+						}
 						/*if(pthread_create(&c_thread[client_id], NULL,(void *) &StartGame, NULL)!=0)
 							infoPrint("Konnte keinen Client-Thread erzeugen");*/
 						client_id++;
 						printf("Client-Id = %i\n", client_id);
+
 						infoPrint("Warte auf weitere Anfragen...");
 					}
 				}
@@ -131,7 +137,7 @@ int CheckData() {
 	for (i = 0; i < MAX_CLIENTS; i++) {
 		if (strncmp(user_data[i].playername, loginrcv.data.playername, 32) == 0) {
 			loginerr.data.error.subtype = 0;
-			strncpy(loginerr.data.error.message, "Spieler mit diesem Benutzernamen bereits angemeldet.", 46);
+			strncpy(loginerr.data.error.message, "Spieler mit diesem Benutzernamen bereits angemeldet.", 64);
 			loginerr.head.type = 255;
 			loginerr.head.length = htons(sizeof(loginerr.data.error.message + 1));
 			return -1;
@@ -141,12 +147,20 @@ int CheckData() {
 	loginrsp.head.length = htons(1);
 	loginrsp.data.ID = (uint8_t) client_id;
 	strncpy(user_data[client_id].playername, loginrcv.data.playername, 32);
+	//DeleteString(loginrcv.data.playername);
 	printf("Player %s ist jetzt verbunden\n", user_data[client_id].playername);
 	user_data[client_id].player_id = (uint8_t)client_id;
-	user_data[client_id].score = htons(0);
+	user_data[client_id].score = htonl(0);
 	printf("Client-ID : %d\t Score: %i\n", client_id, user_data[client_id].score);
 	return 0;
 }
+
+/*void DeleteString(char * playername) {
+	int i;
+	for (i = 0; i <= strlen(playername); i++) {
+		playername [i] = "";
+	}
+}*/
 
 	/*int loginThread(int client) {
 

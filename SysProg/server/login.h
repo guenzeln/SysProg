@@ -14,6 +14,7 @@ void ClientInit(int);
 int ServerInit (void);
 void LoginInit();
 int CheckData();
+//void DeleteString(char *);
 
 /* ... */
 
