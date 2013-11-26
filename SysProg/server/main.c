@@ -16,7 +16,7 @@ int main(int argc, char *argv[]) {
     }
     setProgName(argv[0]);
     debugEnable();
-    infoPrint("Server Gruppe 10");
+    infoPrint("Server Gruppe 08");
 
     //fork
 
