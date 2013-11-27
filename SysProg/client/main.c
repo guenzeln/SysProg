@@ -1,11 +1,18 @@
-/*
- * Systemprogrammierung
- * Multiplayer-Quiz
- *
- * Client
- * 
- * main.c: Hauptprogramm des Clients
- */
+/****************************************************************************/
+/*							main-MODULHEADER	  							*/
+/****************************************************************************/
+/* Projekt:				Systemprogrammierung - Multiplayquiz				*/
+/* Modulname:			main.c												*/
+/* Modeltyp				funktionell											*/
+/* Sprache/Compiler:	C - gcc											    */
+/* Kurzbeschreibung:	Das Modul realisiert den Login des clients		    */
+/* Ersteller:			Gruppe 08											*/
+/* Letzte Änderung 		27.11.12											*/
+/****************************************************************************/
+
+/*--------------------------------------------------------------------------*/
+/*Includes des main Moduls(client)       									*/
+/*--------------------------------------------------------------------------*/
 
 #include "../common/util.h"
 #include "gui/gui_interface.h"
@@ -26,16 +33,23 @@
 
 int main(int argc, char **argv) {
 
-	char Name[32];
+	char Name[32]; 		//Name des Clients
 	setProgName(argv[0]);
-	int i, a;
-	char server_addr[16] = "127.0.0.1";
+	int i, a; //zähler
+	char server_addr[16] = "127.0.0.1"; //IP-adresse
 	int port = 54321; // Standard Port
-	struct packet init;
+	PACKET init,answer;
+	struct sockaddr_in client;
+	struct hostent *hostAddress;
+	pthread_t listener;
+
+/*--------------------------------------------------------------------------*/
+/*Abfrage der Argumente 													*/
+/*--------------------------------------------------------------------------*/
 
 	if (argc == 1) {
 		printf("-n Spielername zwingend angeben \n");
-		exit(0);
+		return 0;
 	}
 
 	for (i = 1; i < argc; i++) {				//Name einlesen
@@ -58,7 +72,7 @@ int main(int argc, char **argv) {
 			}
 		}
 		if (strcmp("-s", argv[i]) == 0) {// Ip adresse falls angegeben auslesen
-			// anderen falls wird 127.0.0.1 genommen
+										 // anderen falls wird 127.0.0.1 genommen
 			printf("-s erkannt \n ");
 			if ((i + 1) >= argc) {
 				printf("argument fehlt \n");
@@ -97,77 +111,79 @@ int main(int argc, char **argv) {
 
 	}
 
-	guiInit(&argc, &argv);
+	guiInit(&argc, &argv);	//GUI initialisieren
 	debugEnable();
 	infoPrint("Client Gruppe 08");
 
-	/* Initialisierung: Verbindungsaufbau, Threads starten usw... */
+/*--------------------------------------------------------------------------*/
+/*Aufbau der Verbindung  													*/
+/*--------------------------------------------------------------------------*/
 
-	int s = socket(AF_INET, SOCK_STREAM, 0); //socket erstellen Ipv4 TCP
-	struct sockaddr_in client;
-	struct hostent *hostAddress;
+	int sock = socket(AF_INET, SOCK_STREAM, 0); //socket erstellen Ipv4 TCP
+
 
 	printf("socket: %d\n",s);
 
-	client.sin_family = AF_INET;		// Ipv4
+	client.sin_family = AF_INET;			// Ipv4
 	hostAddress = gethostbyname(server_addr); // adresstruktur zur Ip bekommen
 	if (hostAddress == NULL ) {
-		printf("Host not found \n");
-		exit(0);
+		perror("Host not found:");
+		return 1;
 	}
 
 	bcopy(hostAddress->h_addr, &(client.sin_addr), hostAddress->h_length); // benötigten teil in client.sin_addr kopieren
 
 	client.sin_port = htons(port);
 
-	if (connect(s, &client, sizeof(client)) < 0) { // Verbindung zum Server herstellen
-		printf("connect failed \n");
+	if (connect(sock, &client, sizeof(client)) < 0) { // Verbindung zum Server herstellen
+		perror("connect failed: ");
+		return 5;
 	}
+/*--------------------------------------------------------------------------*/
+/*Login Anfrage	senden 	 													*/
+/*--------------------------------------------------------------------------*/
 
-	init=createLoginRe(Name);
+	init=createLoginRe(Name); // LoginResponse Packet erstellen
 
-	a = write(s, &init, ntohs(init.head.length) + sizeof(init.head));//Login Request senden
-
-	//if (a != init.head.length + 2) {
-	//	printf("stimmt nicht überein \n");
-	//}
+	a = write(sock, &init, ntohs(init.head.length) + sizeof(init.head));//Login Request senden
 
 	printf("%d gesendet \n", a);
-	PACKET answer;
-	if(read(s,&answer.head,3)<0){
+	if(read(sock,&answer.head,3)<0){
 		perror("Lesen fehlgeschlagen:");
 	}
-	read(s,&answer.data,ntohs(answer.head.length));
+/*--------------------------------------------------------------------------*/
+/*Login Antwort Auswerten 													*/
+/*--------------------------------------------------------------------------*/
+	read(sock,&answer.data,ntohs(answer.head.length));
 	switch(answer.head.type){
 
 		case 2:
 			printf("loginAnswer\n");
 			if (answer.data.ID == 0) {
-			printf("Du bist Spielleiter\n");
+			infoPrint("Du bist Spielleiter\n");
 			}
 			infoPrint("Listener wird gestartet");
 			break;
 		case 255:
 			answer.data.error.message[ntohs(answer.head.length)]='\0';
 			printf("Login fehlgeschlagen, Message: %s \n",answer.data.error.message);
-			exit(2);
+			return 2;
 		default:
-			printf("Keine Gültige Antwort erhalten");
-			exit(3);
+			infoPrint("Keine Gültige Antwort erhalten");
+			return 3;
 	}
 
-	pthread_t listener;
 
-	if(pthread_create(&listener,NULL,(void*)&listenerMain,&s)!=0){
+
+	if(pthread_create(&listener,NULL,(void*)&listenerMain,&socket)!=0){ //Listener Thread starten mit socket als Parameter
 		infoPrint("Konnte keinen Login-Thread erzeugen");
-		exit(1);
+		return 4;
 	}
 
-	preparation_showWindow();
-	guiMain();
+	preparation_showWindow(); // Fenster Anzeigen
+	guiMain();				 //Gui  Main starten --> Blockiert bis ende der Gui
 
-	//game_highlightPlayer(0);
-	guiMain();
+
 	/* Resourcen freigeben usw... */
 	guiDestroy();
 
