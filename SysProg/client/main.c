@@ -17,6 +17,7 @@
 #include "../common/util.h"
 #include "gui/gui_interface.h"
 #include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -53,22 +54,22 @@ int main(int argc, char **argv) {
 	}
 
 	for (i = 1; i < argc; i++) {				//Name einlesen
-		if (strcmp("-n", argv[i]) == 0) {	//argumenttyp erkennen
+		if (strcmp("-n", argv[i]) == 0) {	    //argumenttyp erkennen
 			printf("-n erkannt \n ");
 			if ((i + 1) >= argc) {
 				printf("Spielername fehlt \n");
-				exit(0);
+				return 0;
 			}
 			a = strlen(argv[i + 1]);
 
-			if (a > 32) {					// Länge des Namens Prüfen
+			if (a > 31) {					// Länge des Namens Prüfen
 				printf("%d \n", a);			//Das ist doch Aufgabe des Servers!?
 				printf("Name zu lang \n");
-				exit(0);
+				return 0;
 			} else {
-				strncpy(Name, argv[i + 1], 32);
-
-				infoPrint("Name ist:",Name);
+				strncpy(Name, argv[i + 1], 31);
+				Name[a]='\0';
+				printf("Name: %s \n",Name);
 			}
 		}
 		if (strcmp("-s", argv[i]) == 0) {// Ip adresse falls angegeben auslesen
@@ -76,13 +77,13 @@ int main(int argc, char **argv) {
 			printf("-s erkannt \n ");
 			if ((i + 1) >= argc) {
 				printf("argument fehlt \n");
-				exit(0);
+				return 0;
 			}
 			a = strlen(argv[i + 1]);
 			if (a > 16) {
 				printf("%d \n", a);
 				printf("IP zu lang \n");
-				exit(0);
+				return 0;
 			} else {
 				strncpy(server_addr, argv[i + 1], 16);
 
@@ -94,16 +95,15 @@ int main(int argc, char **argv) {
 				printf("-p erkannt \n ");
 				if ((i + 1) >= argc) {
 					printf("argument fehlt \n");
-					exit(0);
+					return 0;
 				}
 				a = strlen(argv[i + 1]);
 				if (a > 5) {
 					printf("%d \n", a);
 					printf("Port zu lang \n");
-					exit(0);
+					return 0;
 				} else {
 					port = atoi(argv[i+1]);
-
 					printf("Port ist %d \n", port);
 				}
 			}
@@ -122,7 +122,7 @@ int main(int argc, char **argv) {
 	int sock = socket(AF_INET, SOCK_STREAM, 0); //socket erstellen Ipv4 TCP
 
 
-	printf("socket: %d\n",s);
+	printf("socket: %d\n",sock);
 
 	client.sin_family = AF_INET;			// Ipv4
 	hostAddress = gethostbyname(server_addr); // adresstruktur zur Ip bekommen
@@ -135,7 +135,7 @@ int main(int argc, char **argv) {
 
 	client.sin_port = htons(port);
 
-	if (connect(sock, &client, sizeof(client)) < 0) { // Verbindung zum Server herstellen
+	if (connect(sock,(struct sockaddr*) &client, sizeof(client)) < 0) { // Verbindung zum Server herstellen
 		perror("connect failed: ");
 		return 5;
 	}
@@ -155,36 +155,37 @@ int main(int argc, char **argv) {
 /*Login Antwort Auswerten 													*/
 /*--------------------------------------------------------------------------*/
 	read(sock,&answer.data,ntohs(answer.head.length));
+
 	switch(answer.head.type){
 
-		case 2:
-			printf("loginAnswer\n");
-			if (answer.data.ID == 0) {
-			infoPrint("Du bist Spielleiter\n");
-			}
-			infoPrint("Listener wird gestartet");
+		case LOGIN_RSP:
+				printf("loginAnswer\n");
+					if (answer.data.ID == 0) {
+						infoPrint("Du bist Spielleiter\n");
+					}
+				infoPrint("Listener wird gestartet");
 			break;
-		case 255:
-			answer.data.error.message[ntohs(answer.head.length)]='\0';
-			printf("Login fehlgeschlagen, Message: %s \n",answer.data.error.message);
-			return 2;
+
+		case ERROR:
+				answer.data.error.message[ntohs(answer.head.length)]='\0';
+				printf("Login fehlgeschlagen, Message: %s \n",answer.data.error.message);
+				return 2;
 		default:
-			infoPrint("Keine Gültige Antwort erhalten");
-			return 3;
+				infoPrint("Keine Gültige Antwort erhalten");
+				return 3;
 	}
 
 
 
-	if(pthread_create(&listener,NULL,(void*)&listenerMain,&socket)!=0){ //Listener Thread starten mit socket als Parameter
-		infoPrint("Konnte keinen Login-Thread erzeugen");
+	if(pthread_create(&listener,NULL,(void*)&listenerMain,&sock)!=0){ //Listener Thread starten mit socket als Parameter
+		perror("Konnte keinen Login-Thread erzeugen: ");
 		return 4;
 	}
 
 	preparation_showWindow(); // Fenster Anzeigen
-	guiMain();				 //Gui  Main starten --> Blockiert bis ende der Gui
+	guiMain();				  //Gui  Main starten --> Blockiert bis ende der Gui
 
 
-	/* Resourcen freigeben usw... */
 	guiDestroy();
 
 	return 0;

@@ -26,7 +26,7 @@
 #include <arpa/inet.h>
 
 
-void listenerMain(int* sock){ //EinstiegsFunktion des Listeners
+int listenerMain(int* sock){ //EinstiegsFunktion des Listeners
 
 		PACKET answer,empty;
 		int i=0;
@@ -39,7 +39,7 @@ void listenerMain(int* sock){ //EinstiegsFunktion des Listeners
 /*Auf Datenpakete  warten und auswerten  									*/
 /*--------------------------------------------------------------------------*/
 
-		while(read(*sock, &answer.head, 3)>=0){			//Auf antwort des servers warten
+		while(read(*sock, &answer.head, 3)>=0){
 
 			read(*sock, &answer.data, ntohs(answer.head.length));
 			switch (answer.head.type) {
@@ -60,20 +60,20 @@ void listenerMain(int* sock){ //EinstiegsFunktion des Listeners
 						printf("jetzt inhalt: %s ",answer.data.playerlist[0].playername);
 					break;
 
-				case ERRORWARNING:
+				case ERROR:
 
 							switch(answer.data.error.subtype){
 
 								case ERROR_WARNING:		infoPrint("Warning");
 											answer.data.error.message[ntohs(answer.head.length)]='\0';
-											printf("fehler: s%\n",answer.data.error.message);
+											printf("fehler: %s \n",answer.data.error.message);
 											answer=empty;
 										break;
 
 								case ERROR_FATAL:
 											answer.data.error.message[ntohs(answer.head.length)]='\0';
 											printf("fehler:%s \n",answer.data.error.message);
-											exit(0);
+											return 1;
 
 								default:
 											infoPrint("ungültiger Subtype");
@@ -82,4 +82,5 @@ void listenerMain(int* sock){ //EinstiegsFunktion des Listeners
 				}
 
 		}
+		return 0;
 }
