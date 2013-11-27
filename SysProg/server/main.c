@@ -8,7 +8,7 @@
 
 
 int main(int argc, char *argv[]) {
-	pthread_t login_thread;
+        pthread_t login_thread;
 
     if (argc != 2 ) {
         printf("Fehler: Bitte (nur) Port angeben!\n");
@@ -16,7 +16,7 @@ int main(int argc, char *argv[]) {
     }
     setProgName(argv[0]);
     debugEnable();
-    infoPrint("Server Gruppe 10");
+    infoPrint("Server Gruppe 08");
 
     //fork
 
@@ -24,12 +24,14 @@ int main(int argc, char *argv[]) {
 
     if(pthread_create(&login_thread, NULL, (void*)&LoginInit, NULL) != 0) {
 
-    	infoPrint("Konnte keinen Login-Thread erzeugen");
-    	exit(1);
+            infoPrint("Konnte keinen Login-Thread erzeugen");
+            exit(1);
     }
 
-	pthread_join(login_thread,NULL);
+        pthread_join(login_thread,NULL);
 
 
     return 0;
 }
+
+
