@@ -9,12 +9,12 @@
 
 #ifndef RFC_H
 #define RFC_H
-#define LOGINREQUEST     1
-#define LOGINRESPONSE    2
+#define LOGIN_REQ     	 1
+#define LOGIN_RSP    	 2
 #define CATALOGREQUEST   3
 #define CATALOGRESPONSE  4
 #define CATALOGCHANGE    5
-#define PLAYERLIST_RFC   6
+#define PLAYERLIST		 6
 #define STARTGAME        7
 #define QUESTIONREQUEST  8
 #define QUESTION_RFC     9
@@ -22,25 +22,24 @@
 #define QUESTIONRESULT   11
 #define GAMEOVER         12
 #define ERRORWARNING     255
+#define ERROR_FATAL		 1
+#define ERROR_WARNING	 0
+#define PLAYER_LENGTH	 32
 #include <stdint.h>
 #include "../common/question.h"
 
 int PORT;
 
 
-
 #pragma pack(1)
 
-
-
 struct PLAYER{
-
         char playername[32];
         uint32_t score;
         uint8_t player_id;
-
 };
 typedef struct PLAYER PLAYER;
+
 
 struct client_data{
         int clientID;
@@ -58,17 +57,20 @@ struct client_data{
 };
 typedef struct client_data CLIENTDATA;
 
+
 struct header {
 	uint8_t type;
 	uint16_t length;
 };
 typedef struct header HEADER;
 
+
 struct error {
 	uint8_t subtype;
-	char *message;
+	char message [64];
 };
 typedef struct error ERROR;
+
 
 union packetData{
 	char playername[32];
@@ -82,18 +84,17 @@ union packetData{
 };
 typedef union packetData PACKET_DATA;
 
+
 struct packet{
 	HEADER head;
 	PACKET_DATA data;
-
 };
 typedef struct packet PACKET;
 
-
 #pragma pack(0)
+
 
 PACKET createLoginRe(char[]);
 int s;
-
 
 #endif
