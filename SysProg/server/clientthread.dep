@@ -1,3 +1,5 @@
-server/clientthread.o: server/clientthread.c server/clientthread.h
+server/clientthread.o: server/clientthread.c server/clientthread.h \
+ server/../common/util.h
 server/clientthread.c:
 server/clientthread.h:
+server/../common/util.h:

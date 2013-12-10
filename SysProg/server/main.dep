@@ -1,3 +1,7 @@
-server/main.o: server/main.c common/util.h
+server/main.o: server/main.c server/login.h server/../common/util.h \
+ server/../common/rfc.h server/../common/../common/question.h
 server/main.c:
-common/util.h:
+server/login.h:
+server/../common/util.h:
+server/../common/rfc.h:
+server/../common/../common/question.h:

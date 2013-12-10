@@ -13,3 +13,6 @@
 /* ... */
 
 #endif
+
+
+void changeQuestion(int*);

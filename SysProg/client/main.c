@@ -28,8 +28,11 @@
 #include "../common/rfc.h"
 #include <arpa/inet.h>
 #include "listener.h"
+#include "fragewechsel.h"
 
 #define MAX_LENGTH 1024
+
+int sock;
 
 
 int main(int argc, char **argv) {
@@ -43,6 +46,8 @@ int main(int argc, char **argv) {
 	struct sockaddr_in client;
 	struct hostent *hostAddress;
 	pthread_t listener;
+	PACKET empty;
+	memset(&empty,0,sizeof(empty)); //empty wird Komplett auf 0 gesetzt
 
 /*--------------------------------------------------------------------------*/
 /*Abfrage der Argumente 													*/
@@ -119,7 +124,7 @@ int main(int argc, char **argv) {
 /*Aufbau der Verbindung  													*/
 /*--------------------------------------------------------------------------*/
 
-	int sock = socket(AF_INET, SOCK_STREAM, 0); //socket erstellen Ipv4 TCP
+	sock = socket(AF_INET, SOCK_STREAM, 0); //socket erstellen Ipv4 TCP
 
 
 	printf("socket: %d\n",sock);
@@ -145,7 +150,7 @@ int main(int argc, char **argv) {
 
 	init=createLoginRe(Name); // LoginResponse Packet erstellen
 
-	a = write(sock, &init, ntohs(init.head.length) + sizeof(init.head));//Login Request senden
+	a = write(sock, &init, ntohs(init.head.length) + HEAD_SIZE);//Login Request senden
 
 	printf("%d gesendet \n", a);
 	if(read(sock,&answer.head,3)<0){
@@ -162,6 +167,9 @@ int main(int argc, char **argv) {
 				printf("loginAnswer\n");
 					if (answer.data.ID == 0) {
 						infoPrint("Du bist Spielleiter\n");
+						preparation_setMode(2);
+					}else{
+						preparation_setMode(1);
 					}
 				infoPrint("Listener wird gestartet");
 			break;
@@ -174,11 +182,20 @@ int main(int argc, char **argv) {
 				infoPrint("Keine Gültige Antwort erhalten");
 				return 3;
 	}
+	init=empty;
+	init=createCatRe();
+
+	if(write(sock,&init,ntohs(init.head.length)+HEAD_SIZE)<=0){
+		perror("senden des Catalog Request fehler:");
+	}
+
+	pthread_mutex_init(&lock,NULL);
+
 
 
 
 	if(pthread_create(&listener,NULL,(void*)&listenerMain,&sock)!=0){ //Listener Thread starten mit socket als Parameter
-		perror("Konnte keinen Login-Thread erzeugen: ");
+		perror("Konnte keinen Listener-Thread erzeugen: ");
 		return 4;
 	}
 
@@ -193,10 +210,16 @@ int main(int argc, char **argv) {
 
 void preparation_onCatalogChanged(const char *newSelection) {
 	debugPrint("Katalogauswahl: %s", newSelection);
+	PACKET init;
+	init=createCatChange(newSelection);
+	write(sock,&init,ntohs(init.head.length)+HEAD_SIZE);
 }
 
 void preparation_onStartClicked(const char *currentSelection) {
 	debugPrint("Starte Katalog %s", currentSelection);
+	PACKET init;
+	init=createStartGame(currentSelection);
+	write(sock,&init,ntohs(init.head.length)+HEAD_SIZE);
 }
 
 void preparation_onWindowClosed(void) {
@@ -206,6 +229,10 @@ void preparation_onWindowClosed(void) {
 
 void game_onAnswerClicked(int index) {
 	debugPrint("Antwort %i ausgewählt", index);
+	PACKET init;
+	init=createAnswer(index);
+	write(sock,&init,ntohs(init.head.length)+HEAD_SIZE);
+	AnswerClicked=index;
 }
 
 void game_onWindowClosed(void) {

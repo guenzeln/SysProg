@@ -211,7 +211,7 @@ void SendError(int type) {
 	if(type == USR_MAX) {
 		loginerr.data.error.subtype = ERROR_FATAL;
 		strncpy(loginerr.data.error.message, max_clients, strlen(max_clients) - 1);
-		loginerr.head.type = ERRORWARNING;
+		loginerr.head.type = ERROR;
 		loginerr.head.length = htons(sizeof(loginerr.data.error.message) + 1);
 		//close(client_socket[client_id]);
 		send(client_socket[client_id], &loginerr, sizeof(loginerr.head) + ntohs(loginerr.head.length), 0);
@@ -219,7 +219,7 @@ void SendError(int type) {
 	if(type == USR_EXISTS) {
 		loginerr.data.error.subtype = ERROR_WARNING;
 		strncpy(loginerr.data.error.message,usr_exists, strlen(usr_exists)-1);
-		loginerr.head.type = ERRORWARNING;
+		loginerr.head.type = ERROR;
 		loginerr.head.length = htons(sizeof(loginerr.data.error.message)+1);
 		send(client_socket[client_id], &loginerr, sizeof(loginerr.head)+ntohs(loginerr.head.length), 0);
 	}
